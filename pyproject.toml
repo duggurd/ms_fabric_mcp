@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ms-fabric-mcp"
+version = "0.1.1"
+description = "MCP server to run SQL queries and explore schemas in MS Fabric items"
+license-files = ["LICENSE"]
+keywords = ["microsoft", "fabric", "ms-fabric", "mcp", "llm", "warehouse", "lakehouse"]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "azure-identity>=1.23.0",
+    "fastmcp>=2.3.4",
+    "pyodbc>=5.2.0",
+    "sqlparse>=0.5.3",
+]
+
+[project.urls]
+Repository = "https://github.com/duggurd/ms_fabric_mcp"
+Documentation = "https://github.com/duggurd/ms_fabric_mcp/blob/master/README.md"
+
+[project.scripts]
+mcp = "main:cli_start"
