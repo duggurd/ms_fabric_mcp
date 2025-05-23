@@ -41,4 +41,5 @@ def cli_start():
 if __name__ == "__main__":
     # This allows running python -m src.main directly if needed,
     # or if src/main.py is executed as a script.
+
     cli_start() 

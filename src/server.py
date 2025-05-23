@@ -34,10 +34,11 @@ async def query(sql: str) -> Union[List[Dict], Dict[str, str]]:
         FastMCPError: If the query is not a SELECT statement, if database connection fails,
                       or if any other error occurs during query execution.
     """
+
     if not is_readonly_query(sql):
-        raise FastMCPError(
-            "Invalid Query Type: The provided SQL query is not a read-only SELECT statement. Only SELECT queries are allowed.",
-        )
+        return {
+            "error": "Invalid Query Type: The provided SQL query is not a read-only SELECT statement. Only SELECT queries are allowed.",
+        }
 
     cnxn = None
     try:
@@ -68,23 +69,20 @@ async def query(sql: str) -> Union[List[Dict], Dict[str, str]]:
         # Attempt to get more specific error details if available
         # sqlstate = db_err.args[0] if len(db_err.args) > 0 else "N/A"
         # detailed_message = db_err.args[1] if len(db_err.args) > 1 else str(db_err)
-        raise FastMCPError(
-            "Database Execution Error: " + error_message,
-        ) from db_err
+        return {
+            "error": "Database Execution Error: " + error_message,
+        }
     except ConnectionError as conn_err: # Raised by get_db_connection or get_aad_token
         error_message = f"Database connection failed: {str(conn_err)}"
         print(error_message)
-        raise FastMCPError(
-            "Database Connection Error: " + error_message,
-        ) from conn_err
-    except FastMCPError: # Re-raise if it's already a FastMCPError (e.g., from validation)
-        raise
+        # Surface authentication errors clearly
+        return error_message
     except Exception as e:
         error_message = f"An unexpected error occurred during query execution: {str(e)}"
         print(error_message)
-        raise FastMCPError(
-            "Unexpected Server Error: " + error_message,
-        ) from e
+        return {
+            "error": "Unexpected Server Error: " + error_message,
+        }
     finally:
         if cnxn:
             print("Closing database connection.")
@@ -132,9 +130,9 @@ async def search_tables(table_name: str, schema_name: Optional[str] = None) -> U
     
     # Ensure the query is valid
     if not is_readonly_query(sql):
-        raise FastMCPError(
-            "Invalid Query Type: The generated SQL query is not a read-only SELECT statement."
-        )
+        return {
+            "error": "Invalid Query Type: The generated SQL query is not a read-only SELECT statement.",
+        }
         
     cnxn = None
     try:
@@ -162,21 +160,21 @@ async def search_tables(table_name: str, schema_name: Optional[str] = None) -> U
     except pyodbc.Error as db_err:
         error_message = f"Database error occurred: {str(db_err)}"
         print(error_message)
-        raise FastMCPError(
-            "Database Execution Error: " + error_message,
-        ) from db_err
+        return {
+            "error": "Database Execution Error: " + error_message,
+        }
     except ConnectionError as conn_err:
         error_message = f"Database connection failed: {str(conn_err)}"
         print(error_message)
-        raise FastMCPError(
-            "Database Connection Error: " + error_message,
-        ) from conn_err
+        return {
+            "error": "Database Connection Error: " + error_message,
+        }
     except Exception as e:
         error_message = f"An unexpected error occurred during query execution: {str(e)}"
         print(error_message)
-        raise FastMCPError(
-            "Unexpected Server Error: " + error_message,
-        ) from e
+        return {
+            "error": "Unexpected Server Error: " + error_message,
+        }
     finally:
         if cnxn:
             print("Closing database connection.")
@@ -261,21 +259,21 @@ async def search_columns_by_table(table_name: str, schema_name: Optional[str] = 
     except pyodbc.Error as db_err:
         error_message = f"Database error occurred: {str(db_err)}"
         print(error_message)
-        raise FastMCPError(
-            "Database Execution Error: " + error_message,
-        ) from db_err
+        return {
+            "error": "Database Execution Error: " + error_message,
+        }
     except ConnectionError as conn_err:
         error_message = f"Database connection failed: {str(conn_err)}"
         print(error_message)
-        raise FastMCPError(
-            "Database Connection Error: " + error_message,
-        ) from conn_err
+        return {
+            "error": "Database Connection Error: " + error_message,
+        }
     except Exception as e:
         error_message = f"An unexpected error occurred during query execution: {str(e)}"
         print(error_message)
-        raise FastMCPError(
-            "Unexpected Server Error: " + error_message,
-        ) from e
+        return {
+            "error": "Unexpected Server Error: " + error_message,
+        }
     finally:
         if cnxn:
             print("Closing database connection.")
@@ -360,21 +358,21 @@ async def search_tables_by_column(column_name: str, schema_name: Optional[str] =
     except pyodbc.Error as db_err:
         error_message = f"Database error occurred: {str(db_err)}"
         print(error_message)
-        raise FastMCPError(
-            "Database Execution Error: " + error_message,
-        ) from db_err
+        return {
+            "error": "Database Execution Error: " + error_message,
+        }
     except ConnectionError as conn_err:
         error_message = f"Database connection failed: {str(conn_err)}"
         print(error_message)
-        raise FastMCPError(
-            "Database Connection Error: " + error_message,
-        ) from conn_err
+        return {
+            "error": "Database Connection Error: " + error_message,
+        }
     except Exception as e:
         error_message = f"An unexpected error occurred during query execution: {str(e)}"
         print(error_message)
-        raise FastMCPError(
-            "Unexpected Server Error: " + error_message,
-        ) from e
+        return {
+            "error": "Unexpected Server Error: " + error_message,
+        }
     finally:
         if cnxn:
             print("Closing database connection.")
@@ -530,24 +528,22 @@ async def search_query_patterns(
     except pyodbc.Error as db_err:
         error_message = f"Database error occurred: {str(db_err)}"
         print(error_message)
-        raise FastMCPError(
-            "Database Execution Error: " + error_message,
-        ) from db_err
+        return {
+            "error": "Database Execution Error: " + error_message,
+        }
     except ConnectionError as conn_err:
         error_message = f"Database connection failed: {str(conn_err)}"
         print(error_message)
-        raise FastMCPError(
-            "Database Connection Error: " + error_message,
-        ) from conn_err
+        return {
+            "error": "Database Connection Error: " + error_message,
+        }
     except Exception as e:
         error_message = f"An unexpected error occurred: {str(e)}"
         print(error_message)
-        raise FastMCPError(
-            "Unexpected Server Error: " + error_message,
-        ) from e
+        return {
+            "error": "Unexpected Server Error: " + error_message,
+        }
     finally:
         if cnxn:
             print("Closing database connection.")
             cnxn.close()
-
-# Tool implementation will go here 

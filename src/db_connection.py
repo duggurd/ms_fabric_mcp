@@ -40,7 +40,7 @@ def get_db_connection():
         # The format is: int length, byte array token.
         # struct.pack("=i" + str(len(token_bytes)) + "s", len(token_bytes), token_bytes)
         # Using "=i" for standard size integer (4 bytes), followed by the bytes of the token.
-        conn_str = f"DRIVER={odbc_driver};SERVER={server_name};DATABASE={database_name};Encrypt=yes;TrustServerCertificate=no;"
+        conn_str = f"DRIVER={odbc_driver};SERVER={server_name};DATABASE={database_name};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=2;"
 
         # SQL_COPT_SS_ACCESS_TOKEN tells the driver that we are providing an access token
         cnxn = pyodbc.connect(conn_str, attrs_before={SQL_COPT_SS_ACCESS_TOKEN: token_struct})
