@@ -90,14 +90,15 @@ async def query(sql: str) -> Union[List[Dict], Dict[str, str]]:
 
 @app.tool(
     name="search_tables",
-    description="Search for tables by name, wildcard, case insensitive, and schema in the INFORMATION_SCHEMA.TABLES view.",
+    description="Search for tables by name (optionally using wildcards), case insensitive, and schema in the INFORMATION_SCHEMA.TABLES view.",
 )
-async def search_tables(table_name: str, schema_name: Optional[str] = None) -> Union[List[Dict], Dict[str, str]]:
+async def search_tables(table_name: str, schema_name: Optional[str] = None, use_wildcard: bool = True) -> Union[List[Dict], Dict[str, str]]:
     """Search for tables by name in the INFORMATION_SCHEMA.TABLES view.
     
     Args:
-        table_name: Full or partial table name to search for (case-insensitive)
-        schema_name: Optional schema name to filter results
+        table_name: Table name to search for (case-insensitive). If use_wildcard is True, this can be a partial name.
+        schema_name: Optional schema name to filter results.
+        use_wildcard: If True (default), performs a wildcard search (LIKE '%name%'). If False, matches exact table name (using =).
         
     Returns:
         A list of dictionaries, where each dictionary represents a matching table with its metadata.
@@ -116,16 +117,20 @@ async def search_tables(table_name: str, schema_name: Optional[str] = None) -> U
     FROM 
         INFORMATION_SCHEMA.TABLES
     WHERE 
-        LOWER(TABLE_NAME) LIKE LOWER(?)
+        LOWER(TABLE_NAME) {} LOWER(?)
     """
     
-    # Add schema filter if provided
-    params = [f'%{table_name}%']
+    if use_wildcard:
+        comparator = 'LIKE'
+        param = f'%{table_name}%'
+    else:
+        comparator = '='
+        param = table_name
+    sql = sql.format(comparator)
+    params = [param]
     if schema_name:
         sql += " AND TABLE_SCHEMA = ?"
         params.append(schema_name)
-    
-    # Add ordering for consistent results
     sql += " ORDER BY TABLE_SCHEMA, TABLE_NAME"
     
     # Ensure the query is valid
@@ -182,14 +187,15 @@ async def search_tables(table_name: str, schema_name: Optional[str] = None) -> U
 
 @app.tool(
     name="search_columns_by_table",
-    description="Search for columns in tables matching the provided name, wildcard, case insensitive, and schema in the INFORMATION_SCHEMA.COLUMNS view.",
+    description="Search for columns in tables matching the provided name (optionally using wildcards), case insensitive, and schema in the INFORMATION_SCHEMA.COLUMNS view.",
 )
-async def search_columns_by_table(table_name: str, schema_name: Optional[str] = None) -> Union[List[Dict], Dict[str, str]]:
+async def search_columns_by_table(table_name: str, schema_name: Optional[str] = None, use_wildcard: bool = True) -> Union[List[Dict], Dict[str, str]]:
     """Search for columns in tables matching the provided name.
     
     Args:
-        table_name: Full or partial table name to search for (case-insensitive)
-        schema_name: Optional schema name to filter results
+        table_name: Table name to search for (case-insensitive). If use_wildcard is True, this can be a partial name.
+        schema_name: Optional schema name to filter results.
+        use_wildcard: If True (default), performs a wildcard search (LIKE '%name%'). If False, matches exact table name (using =).
         
     Returns:
         A list of dictionaries, where each dictionary represents a column with its metadata.
@@ -215,16 +221,20 @@ async def search_columns_by_table(table_name: str, schema_name: Optional[str] = 
     FROM 
         INFORMATION_SCHEMA.COLUMNS
     WHERE 
-        LOWER(TABLE_NAME) LIKE LOWER(?)
+        LOWER(TABLE_NAME) {} LOWER(?)
     """
     
-    # Add schema filter if provided
-    params = [f'%{table_name}%']
+    if use_wildcard:
+        comparator = 'LIKE'
+        param = f'%{table_name}%'
+    else:
+        comparator = '='
+        param = table_name
+    sql = sql.format(comparator)
+    params = [param]
     if schema_name:
         sql += " AND TABLE_SCHEMA = ?"
         params.append(schema_name)
-    
-    # Add ordering for consistent results
     sql += " ORDER BY TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION"
     
     # Ensure the query is valid
@@ -281,14 +291,15 @@ async def search_columns_by_table(table_name: str, schema_name: Optional[str] = 
 
 @app.tool(
     name="search_tables_by_column",
-    description="Search for tables containing columns matching the provided name, wildcard, case insensitive, and schema in the INFORMATION_SCHEMA.COLUMNS view.",
+    description="Search for tables containing columns matching the provided name (optionally using wildcards), case insensitive, and schema in the INFORMATION_SCHEMA.COLUMNS view.",
 )
-async def search_tables_by_column(column_name: str, schema_name: Optional[str] = None) -> Union[List[Dict], Dict[str, str]]:
+async def search_tables_by_column(column_name: str, schema_name: Optional[str] = None, use_wildcard: bool = True) -> Union[List[Dict], Dict[str, str]]:
     """Search for tables containing columns matching the provided name.
     
     Args:
-        column_name: Full or partial column name to search for (case-insensitive)
-        schema_name: Optional schema name to filter results
+        column_name: Column name to search for (case-insensitive). If use_wildcard is True, this can be a partial name.
+        schema_name: Optional schema name to filter results.
+        use_wildcard: If True (default), performs a wildcard search (LIKE '%name%'). If False, matches exact column name (using =).
         
     Returns:
         A list of dictionaries, where each dictionary represents a column with its table and metadata.
@@ -314,16 +325,20 @@ async def search_tables_by_column(column_name: str, schema_name: Optional[str] =
     FROM 
         INFORMATION_SCHEMA.COLUMNS
     WHERE 
-        LOWER(COLUMN_NAME) LIKE LOWER(?)
+        LOWER(COLUMN_NAME) {} LOWER(?)
     """
     
-    # Add schema filter if provided
-    params = [f'%{column_name}%']
+    if use_wildcard:
+        comparator = 'LIKE'
+        param = f'%{column_name}%'
+    else:
+        comparator = '='
+        param = column_name
+    sql = sql.format(comparator)
+    params = [param]
     if schema_name:
         sql += " AND TABLE_SCHEMA = ?"
         params.append(schema_name)
-    
-    # Add ordering for consistent results
     sql += " ORDER BY TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION"
     
     # Ensure the query is valid
