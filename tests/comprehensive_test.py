@@ -28,7 +28,10 @@ test_queries = [
     "UPDATE products SET price = price * 1.1 WHERE category = 'electronics' AND last_updated < '2023-01-01'",
     
     # DELETE statement
-    "DELETE FROM temporary_logs WHERE created_date < DATEADD(day, -30, GETDATE())"
+    "DELETE FROM temporary_logs WHERE created_date < DATEADD(day, -30, GETDATE())",
+
+    # with comments and newlines
+    "-- this is a test query. that should be valid \nSELECT TOP 10 COLUMNS1, COLUMNS2, COLUMN5 \nFROM my_schema.my_table WHERE 1=1"
 ]
 
 # Process each query and print the results

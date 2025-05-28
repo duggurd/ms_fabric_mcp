@@ -60,17 +60,32 @@ def normalize_query(query: str) -> Dict[str, Union[str, List[str]]]:
 
 def _clean_query(query: str) -> str:
     """Clean and format the query for better parsing."""
-    # Remove extra whitespace and convert to uppercase for keywords only
+    # Preserve comments by temporarily replacing them
+    comment_pattern = r'--.*?$'
+    comments = []
+    def save_comment(match):
+        comments.append(match.group(0))
+        return f"__COMMENT_{len(comments)-1}__"
+    
+    # Save comments
+    query = re.sub(comment_pattern, save_comment, query, flags=re.MULTILINE)
+    
+    # Format the query
     query = sqlparse.format(
         query,
         keyword_case='upper',
         identifier_case=None,  # Don't change identifier case
-        strip_comments=True,
+        strip_comments=False,  # Don't strip comments as we're handling them
         reindent=True
     )
     
     # Remove newlines for simpler regex processing
     query = re.sub(r'\s+', ' ', query)
+    
+    # Restore comments
+    for i, comment in enumerate(comments):
+        query = query.replace(f"__COMMENT_{i}__", comment)
+    
     return query.strip()
 
 def _normalize_with_preserved_case(query: str) -> str:
@@ -173,6 +188,10 @@ def _extract_columns(query: str) -> Set[str]:
             
             # Skip SQL keywords and functions
             if condition.lower() in sql_keywords or condition.lower() in sql_functions:
+                continue
+                
+            # Skip numeric literals
+            if condition.isdigit():
                 continue
                 
             # Handle AND/OR in conditions
